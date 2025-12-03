@@ -1,4 +1,4 @@
-Implementacion de un servidor con api REST usando servlets
+Implementacion de un servidor con api REST usando servlets en un servidor Tomcat
 
 Errores mas comunes con http y rest: 
 <br>  <br>
