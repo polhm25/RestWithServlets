@@ -1,11 +1,5 @@
 package org.hlanz.servlets;
 
-
-
-import org.hlanz.entity.Pastel;
-import org.hlanz.mensaje.JsonUtil;
-import org.hlanz.repository.PastelRepository;
-
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -13,12 +7,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.List;
 
-//Aqui explicar el error de pastelservlet vs pastelservlet/*
-@WebServlet("/pastelservlet/*")
-public class PastelServlet extends HttpServlet {
-    private PastelRepository repository = PastelRepository.getInstance();
+@WebServlet("/enemigoservlet/*")
+public class EnemigoServlet extends HttpServlet {
+    private EnemigoService service = new EnemigoService();
 
     // GET - Obtener todos o uno por ID
     @Override
@@ -32,42 +24,40 @@ public class PastelServlet extends HttpServlet {
 
         try {
             if (pathInfo == null || pathInfo.equals("/")) {
-                // GET /api/pasteles - Obtener todos
-                List<Pastel> pasteles = repository.obtenerTodos();
-                String json = JsonUtil.pastelesListToJson(pasteles);
+                // GET /enemigoservlet/ - Obtener todos
+                String json = service.obtenerTodos();
                 resp.setStatus(HttpServletResponse.SC_OK);
                 resp.getWriter().write(json);
 
             } else {
-                // GET /api/pasteles/{id} - Obtener uno por ID
-                Long id = Long.parseLong(pathInfo.substring(1));
-                Pastel pastel = repository.obtenerPorId(id);
+                // GET /enemigoservlet/{id} - Obtener uno por ID
+                String id = pathInfo.substring(1);
+                String json = service.obtenerPorId(id);
 
-                if (pastel != null) {
-                    String json = JsonUtil.pastelToJson(pastel);
-                    resp.setStatus(HttpServletResponse.SC_OK);
-                    resp.getWriter().write(json);
-                } else {
+                if (json.contains("\"error\"")) {
                     resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                    resp.getWriter().write("{\"error\":\"Pastel no encontrado\"}");
+                } else {
+                    resp.setStatus(HttpServletResponse.SC_OK);
                 }
+                resp.getWriter().write(json);
             }
-        } catch (NumberFormatException e) {
+        } catch (Exception e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             resp.getWriter().write("{\"error\":\"ID inválido\"}");
         }
     }
+
+    // POST - Crear nuevo enemigo
     /*
+    Ejemplo de JSON para crear enemigo:
     {
-      "nombre": "Pionono",
-      "sabor": "flan ",
-      "precio": 2,
-      "porciones": 1
+      "nombre": "Nuevo Enemigo",
+      "genero": "Masculino",
+      "pais": "España",
+      "afiliacion": "Ninguna",
+      "activo": true
     }
      */
-
-
-    // POST - Crear nuevo pastel
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -76,18 +66,15 @@ public class PastelServlet extends HttpServlet {
         resp.setCharacterEncoding("UTF-8");
 
         try {
-            // Leer el cuerpo de la petición
             String json = leerBody(req);
+            String resultado = service.crear(json);
 
-            // Convertir JSON a objeto
-            Pastel nuevoPastel = JsonUtil.jsonToPastel(json);
-
-            // Guardar en el repositorio
-            Pastel pastelCreado = repository.crear(nuevoPastel);
-
-            // Responder con el pastel creado
-            resp.setStatus(HttpServletResponse.SC_CREATED);
-            resp.getWriter().write(JsonUtil.pastelToJson(pastelCreado));
+            if (resultado.contains("\"error\"")) {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            } else {
+                resp.setStatus(HttpServletResponse.SC_CREATED);
+            }
+            resp.getWriter().write(resultado);
 
         } catch (Exception e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -95,7 +82,7 @@ public class PastelServlet extends HttpServlet {
         }
     }
 
-    // PUT - Actualizar pastel existente
+    // PUT - Actualizar enemigo existente
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -112,19 +99,16 @@ public class PastelServlet extends HttpServlet {
         }
 
         try {
-            Long id = Long.parseLong(pathInfo.substring(1));
+            String id = pathInfo.substring(1);
             String json = leerBody(req);
-            Pastel pastel = JsonUtil.jsonToPastel(json);
+            String resultado = service.actualizar(id, json);
 
-            Pastel actualizado = repository.actualizar(id, pastel);
-
-            if (actualizado != null) {
-                resp.setStatus(HttpServletResponse.SC_OK);
-                resp.getWriter().write(JsonUtil.pastelToJson(actualizado));
-            } else {
+            if (resultado.contains("\"error\"")) {
                 resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                resp.getWriter().write("{\"error\":\"Pastel no encontrado\"}");
+            } else {
+                resp.setStatus(HttpServletResponse.SC_OK);
             }
+            resp.getWriter().write(resultado);
 
         } catch (Exception e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -132,7 +116,7 @@ public class PastelServlet extends HttpServlet {
         }
     }
 
-    // DELETE - Eliminar pastel
+    // DELETE - Eliminar enemigo
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -149,17 +133,17 @@ public class PastelServlet extends HttpServlet {
         }
 
         try {
-            Long id = Long.parseLong(pathInfo.substring(1));
-            boolean eliminado = repository.eliminar(id);
+            String id = pathInfo.substring(1);
+            String resultado = service.eliminar(id);
 
-            if (eliminado) {
-                resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
-            } else {
+            if (resultado.contains("\"error\"")) {
                 resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                resp.getWriter().write("{\"error\":\"Pastel no encontrado\"}");
+                resp.getWriter().write(resultado);
+            } else {
+                resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
             }
 
-        } catch (NumberFormatException e) {
+        } catch (Exception e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             resp.getWriter().write("{\"error\":\"ID inválido\"}");
         }
@@ -175,5 +159,4 @@ public class PastelServlet extends HttpServlet {
         }
         return buffer.toString();
     }
-
 }

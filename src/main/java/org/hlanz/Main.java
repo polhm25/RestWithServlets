@@ -1,16 +1,16 @@
 package org.hlanz;
 
-import org.hlanz.servlets.PastelService;
+import org.hlanz.servlets.EnemigoService;
 
 import java.util.Scanner;
 
 public class Main {
-    void main(){
+    public static void main(String[] args){
         //Hacemos un objeto service como en acceso a datos
-        PastelService service = new PastelService();
+        EnemigoService service = new EnemigoService();
         Scanner scanner = new Scanner(System.in);
 
-        System.out.println("|||||||||||| API REST DE PASTELES - PRUEBA SIN SERVIDOR ||||||||||||\n");
+        System.out.println("|||||||||||| API REST DE ENEMIGOS - PRUEBA SIN SERVIDOR ||||||||||||\n");
 
         /*
         Vamos a simular las peticiones HTTP que le hariamos a un servidor web
@@ -18,88 +18,56 @@ public class Main {
         Lo siguiente seria hacer esto con servlets
         (clase de Java que se ejecuta en un servidor web)
          */
+        System.out.println("NOTA: Para probar con tu BD real, primero asegurate de tener:");
+        System.out.println("- MongoDB corriendo en localhost:27017");
+        System.out.println("- Base de datos 'mydb' con colección 'enemigos'");
+        System.out.println("\nOpciones:");
+        System.out.println("1. GET - Obtener todos los enemigos");
+        System.out.println("2. GET - Obtener un enemigo por ID");
+        System.out.println("3. POST - Crear un nuevo enemigo");
+        System.out.println("0. Salir\n");
+
         while (true) {
+            System.out.print("Selecciona una opción: ");
             int opcion = Integer.parseInt(scanner.nextLine());
             System.out.println();
 
             switch (opcion) {
+                case 0:
+                    System.out.println("Saliendo...");
+                    scanner.close();
+                    return;
                 case 1:
-                    // 1. GET - Obtener todos los pasteles
-                    System.out.println("1. GET /api/pasteles - Obtener todos los pasteles:");
+                    // 1. GET - Obtener todos los enemigos
+                    System.out.println("1. GET /enemigoservlet/ - Obtener todos los enemigos:");
                     System.out.println(formatJson(service.obtenerTodos()));
                     System.out.println("\n" + "=".repeat(60) + "\n");
                     break;
                 case 2:
-                    // 2. GET - Obtener un pastel específico (ID 2)
-                    System.out.println("2. GET /api/pasteles/2 - Obtener pastel con ID 2:");
-                    System.out.println(formatJson(service.obtenerPorId(2L)));
+                    // 2. GET - Obtener un enemigo específico
+                    System.out.print("Ingresa el ID del enemigo (ObjectId de MongoDB): ");
+                    String idBuscar = scanner.nextLine();
+                    System.out.println("2. GET /enemigoservlet/" + idBuscar + " - Obtener enemigo:");
+                    System.out.println(formatJson(service.obtenerPorId(idBuscar)));
                     System.out.println("\n" + "=".repeat(60) + "\n");
                     break;
                 case 3:
-                    // 3. POST - Crear un nuevo pastel
-                    System.out.println("3. POST /api/pasteles - Crear nuevo pastel:");
-                    String nuevoPastelJson = "{\"nombre\":\"Cheesecake\",\"sabor\":\"Frutos rojos\",\"precio\":32.50,\"porciones\":16}";
-                    System.out.println("Body enviado: " + formatJson(nuevoPastelJson));
-                    String respuestaCrear = service.crear(nuevoPastelJson);
+                    // 3. POST - Crear un nuevo enemigo
+                    System.out.println("3. POST /enemigoservlet/ - Crear nuevo enemigo:");
+                    String nuevoEnemigoJson = "{\"nombre\":\"Nuevo Enemigo\",\"genero\":\"Masculino\",\"pais\":\"España\",\"afiliacion\":\"Ninguna\",\"activo\":true}";
+                    System.out.println("Body enviado: " + formatJson(nuevoEnemigoJson));
+                    String respuestaCrear = service.crear(nuevoEnemigoJson);
                     System.out.println("Respuesta: " + formatJson(respuestaCrear));
                     System.out.println("\n" + "=".repeat(60) + "\n");
                     break;
-                case 4:
-                    // 4. GET - Verificar que se creó (igual que opcion 1)
-                    System.out.println("4. GET /api/pasteles - Verificar todos los pasteles:");
-                    System.out.println(formatJson(service.obtenerTodos()));
-                    System.out.println("\n" + "=".repeat(60) + "\n");
-                    break;
-                case 5:
-                    // 5. PUT - Actualizar el pastel con ID 1
-                    System.out.println("5. PUT /api/pasteles/1 - Actualizar pastel con ID 1:");
-                    String actualizarJson = "{\"nombre\":\"Tres Leches Premium\",\"sabor\":\"Vainilla Extra\",\"precio\":35.00,\"porciones\":15}";
-                    System.out.println("Body enviado: " + formatJson(actualizarJson));
-                    String respuestaActualizar = service.actualizar(1L, actualizarJson);
-                    System.out.println("Respuesta: " + formatJson(respuestaActualizar));
-                    System.out.println("\n" + "=".repeat(60) + "\n");
-                    break;
-                case 6:
-                    // 6. GET - Verificar actualización
-                    System.out.println("6. GET /api/pasteles/1 - Verificar actualización:");
-                    System.out.println(formatJson(service.obtenerPorId(1L)));
-                    System.out.println("\n" + "=".repeat(60) + "\n");
-                    break;
-                case 7:
-                    // 7. DELETE - Eliminar el pastel con ID 3
-                    System.out.println("7. DELETE /api/pasteles/3 - Eliminar pastel con ID 3:");
-                    String respuestaEliminar = service.eliminar(3L);
-                    System.out.println("Respuesta: " + formatJson(respuestaEliminar));
-                    System.out.println("\n" + "=".repeat(60) + "\n");
-                    break;
-                case 8:
-                    // 8. GET - Verificar eliminación (igual que opcion 1)
-                    System.out.println("8. GET /api/pasteles - Verificar que se eliminó:");
-                    System.out.println(formatJson(service.obtenerTodos()));
-                    System.out.println("\n" + "=".repeat(60) + "\n");
-                    break;
-                case 9:
-                    // 9. GET - Intentar obtener pastel eliminado
-                    System.out.println("9. GET /api/pasteles/3 - Intentar obtener pastel eliminado:");
-                    System.out.println(formatJson(service.obtenerPorId(3L)));
-                    System.out.println("\n" + "=".repeat(60) + "\n");
-                    break;
-                case 10:
-                    // 10. POST - Crear con datos inválidos
-                    System.out.println("10. POST /api/pasteles - Crear con datos inválidos:");
-                    String jsonInvalido = "{\"nombre\":\"Pastel sin datos}";
-                    System.out.println("Body enviado: " + jsonInvalido);
-                    String respuestaError = service.crear(jsonInvalido);
-                    System.out.println("Respuesta: " + formatJson(respuestaError));
-                    break;
                 default:
-                    System.out.println("❌ Opción inválida. Intenta de nuevo.\n");
+                    System.out.println("Opción inválida. Intenta de nuevo.\n");
             }
         }//fin while
     }// fin Main
 
     // Método auxiliar para formatear JSON (indentación simple)
-    private String formatJson(String json) {
+    private static String formatJson(String json) {
         StringBuilder formatted = new StringBuilder();
         int indentLevel = 0;
         boolean inString = false;
